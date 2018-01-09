@@ -3,6 +3,7 @@ const { games, competitors, contests } = require('../../db');
 const clubs = require('../clubs');
 const users = require('../users');
 const teaser = require('./teaser');
+const recommend = require('./recommend');
 
 const R = require('ramda');
 
@@ -38,7 +39,7 @@ module.exports = async ({ gid }) => {
   );
   const schedule = R.pipe(R.mapTo(R.prop('id'), R.identity))(await contests.find({ gid }));
 
-  return {
+  const detailedGame = {
     ...game,
     parent,
     continueIn,
@@ -47,4 +48,6 @@ module.exports = async ({ gid }) => {
     competitorsSize: R.keys(competitorList).length,
     schedule,
   };
+
+  return recommend(detailedGame);
 };

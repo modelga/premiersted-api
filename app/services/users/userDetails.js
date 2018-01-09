@@ -13,7 +13,10 @@ module.exports = async ({ id }) => {
   const gamesIdsList = R.map(R.prop('gid'))(await competitors.find({ uid: user.id }));
   const [contestsList, gamesList] = await Promise.all([
     contests.find({ uid: id }).then(R.pipe(R.map(contestDetails), promiseAll)),
-    games.teasers(gamesIdsList).then(listView).then(R.mapTo(R.prop('id'), R.identity)),
+    games
+      .teasers(gamesIdsList)
+      .then(listView)
+      .then(R.mapTo(R.prop('id'), R.identity)),
   ]);
   return {
     ...user,
