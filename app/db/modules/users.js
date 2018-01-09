@@ -29,7 +29,7 @@ module.exports = dbP => ({
   },
   async store({ id, ...rest }) {
     const db = await dbP;
-    db.query('INSERT INTO users(id, access, meta) VALUES(?,?,?)', [id, 'USER', JSON.stringify(rest)]);
+    db.query('INSERT INTO users(id, access, meta) VALUES(?,?,?)', [id, 'NONE', JSON.stringify(rest)]);
     return this.findById(id);
   },
   async updateMeta({
