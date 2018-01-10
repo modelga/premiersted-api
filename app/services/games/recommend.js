@@ -4,30 +4,42 @@ const Cache = require('../../utils/cache');
 const cache = Cache({ maxAge: 2000, max: 1000 });
 
 const metricList = R.curry((metricFunction, list) =>
-  R.pipe(R.values, R.reduce(metricFunction, 0))(list));
+  R.pipe(R.values, R.reduce(metricFunction, R.values(list)[0]))(list));
 
 const average = list => metricList(R.add, list) / R.length(R.values(list));
 const maxOf = metricList(R.max);
 const minOf = metricList(R.min);
 const fieldName = 'recommended';
-
-const normalize = (schedule) => {
+const sort = matches =>
+  R.pipe(
+    R.values,
+    R.sortWith([
+      R.descend(R.prop('recommended')),
+      R.descend(R.pipe(R.prop('updated'), d => new Date(d).getTime())),
+      R.ascend(R.pipe(R.prop('id'))),
+    ]),
+    R.indexBy(R.prop('id')),
+  )(matches);
+const normalize = (schedule, isRematchRound) => {
   const recomendationsValues = R.values(R.pluck(fieldName, schedule));
-  const [max, min] = [maxOf(recomendationsValues), minOf(recomendationsValues)];
+  const [max = 0, min = 0] = [maxOf(recomendationsValues), minOf(recomendationsValues)];
   const range = max - min;
   if (range === 0) {
-    return R.map(R.assoc(fieldName, 1))(schedule);
+    return R.mapObjIndexed(match => ({
+      ...match,
+      [fieldName]: isRematchRound || !match.willBeRematch ? 1 : 0,
+      enabled: isRematchRound || !match.willBeRematch,
+    }))(schedule);
   }
-  const normalized = R.mapObjIndexed((match, isRematchRound) => {
+  const normalized = R.mapObjIndexed((match) => {
     if (match.status !== 'SCHEDULED') {
       return { ...match, [fieldName]: 1 };
     }
-    const willBeRematch = schedule[match.rematch].status !== 'SCHEDULED';
+
     const score = Math.max(0, (match[fieldName] - min) / range);
     const recommends = {
-      [fieldName]: willBeRematch ? score * 0.75 * (isRematchRound ? 0 : 1) : score,
-      willBeRematch,
-      enabled: isRematchRound ? !willBeRematch : true,
+      [fieldName]: match.willBeRematch ? score * 0.75 * (isRematchRound ? 0 : 1) : score,
+      enabled: isRematchRound || !match.willBeRematch,
     };
     cache.set(match.id, recommends);
     return {
@@ -35,12 +47,7 @@ const normalize = (schedule) => {
       ...recommends,
     };
   })(schedule);
-  const sorted = R.sortWith([
-    R.descend(R.prop('recommended')),
-    R.descend(R.pipe(R.prop('updated'), d => new Date(d).getTime())),
-    R.ascend(R.pipe(R.prop('id'))),
-  ])(R.values(normalized));
-  return R.indexBy(R.prop('id'), sorted);
+  return normalized;
 };
 module.exports.contest = async ({ id, gid }) => {
   // DIRTY HACK NEED TO BE RE-DEVELOPED
@@ -61,19 +68,24 @@ module.exports.game = (game) => {
     const avgPlayed = average(played);
     const isRematchRound = minOf(played) >= table.length - 1;
     const toPlayScore = R.mapObjIndexed(R.pipe(R.subtract(avgPlayed)), played);
+
     const scoredSchedule = R.mapObjIndexed((match) => {
       if (match.status !== 'SCHEDULED') {
         return { ...match, enabled: true };
       }
+      const willBeRematch = schedule[match.rematch].status !== 'SCHEDULED';
+      const enabled = isRematchRound || !match.willBeRematch;
       return {
         ...match,
-        enabled: true,
-        [fieldName]: toPlayScore[match.home] + toPlayScore[match.visitor],
+        willBeRematch,
+        enabled,
+        [fieldName]: enabled ? toPlayScore[match.home] + toPlayScore[match.visitor] : 0,
       };
     })(schedule);
+    const normalized = normalize(scoredSchedule, isRematchRound);
     return {
       ...game,
-      schedule: normalize(scoredSchedule, isRematchRound),
+      schedule: sort(normalized),
     };
   }
   return game;
