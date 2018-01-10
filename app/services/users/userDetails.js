@@ -3,7 +3,6 @@ const {
 } = require('../../db');
 const { contest } = require('../games/contest');
 const R = require('ramda');
-const delay = require('delay');
 const listView = require('../games/listView');
 
 const promiseAll = pList => Promise.all(pList);

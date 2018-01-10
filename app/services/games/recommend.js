@@ -44,13 +44,11 @@ const normalize = (schedule) => {
 };
 module.exports.contest = async ({ id, gid }) => {
   // DIRTY HACK NEED TO BE RE-DEVELOPED
-  const detailedGame = require('./detailedGame');
+  const detailedGame = require('./detailedGame'); // eslint-disable-line
   const reccomends = cache.get(id);
   if (!reccomends) {
-    console.log(`Cache not found for ${gid}`);
     const schedule = await cache.getOrSet(`g:${gid}`, async () =>
       detailedGame({ gid }).then(R.prop('schedule')));
-    console.log('schedule ', R.length(R.values(schedule)));
     const related = R.pick(['enabled', fieldName, 'willBeRematch'], schedule[id]);
     return related;
   }
