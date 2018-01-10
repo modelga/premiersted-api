@@ -20,7 +20,7 @@ const normalize = (schedule) => {
   }
   const normalized = R.mapObjIndexed((match, isRematchRound) => {
     if (match.status !== 'SCHEDULED') {
-      return { ...match, [fieldName]: 1 };
+      return { ...match, [fieldName]: 1, enabled: true };
     }
     const willBeRematch = schedule[match.rematch].status !== 'SCHEDULED';
     const score = Math.max(0, (match[fieldName] - min) / range);
