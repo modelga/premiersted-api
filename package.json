@@ -43,7 +43,7 @@
     "varium": "^1.0.1"
   },
   "devDependencies": {
-    "chance": "^1.0.12",
+    "chance": "^1.0.13",
     "eslint": "^4.11.0",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-plugin-import": "^2.8.0",
