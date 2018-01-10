@@ -1,4 +1,7 @@
 const R = require('ramda');
+const Cache = require('../../utils/cache');
+
+const cache = Cache({ maxAge: 2000, max: 1000 });
 
 const metricList = R.curry((metricFunction, list) =>
   R.pipe(R.values, R.reduce(metricFunction, 0))(list));
@@ -21,11 +24,15 @@ const normalize = (schedule) => {
     }
     const willBeRematch = schedule[match.rematch].status !== 'SCHEDULED';
     const score = Math.max(0, (match[fieldName] - min) / range);
-    return {
-      ...match,
+    const recommends = {
       [fieldName]: willBeRematch ? score * 0.75 * (isRematchRound ? 0 : 1) : score,
       willBeRematch,
       enabled: isRematchRound ? !willBeRematch : true,
+    };
+    cache.set(match.id, recommends);
+    return {
+      ...match,
+      ...recommends,
     };
   })(schedule);
   const sorted = R.sortWith([
@@ -35,8 +42,21 @@ const normalize = (schedule) => {
   ])(R.values(normalized));
   return R.indexBy(R.prop('id'), sorted);
 };
-
-module.exports = (game) => {
+module.exports.contest = async ({ id, gid }) => {
+  // DIRTY HACK NEED TO BE RE-DEVELOPED
+  const detailedGame = require('./detailedGame');
+  const reccomends = cache.get(id);
+  if (!reccomends) {
+    console.log(`Cache not found for ${gid}`);
+    const schedule = await cache.getOrSet(`g:${gid}`, async () =>
+      detailedGame({ gid }).then(R.prop('schedule')));
+    console.log('schedule ', R.length(R.values(schedule)));
+    const related = R.pick(['enabled', fieldName, 'willBeRematch'], schedule[id]);
+    return related;
+  }
+  return reccomends;
+};
+module.exports.game = (game) => {
   const { table, schedule } = game;
   if (!R.isEmpty(table) || R.isEmpty(schedule)) {
     const played = R.pipe(R.indexBy(R.prop('id')), R.mapObjIndexed(R.prop('played')))(table);

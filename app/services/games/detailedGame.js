@@ -49,5 +49,5 @@ module.exports = async ({ gid }) => {
     schedule,
   };
 
-  return recommend(detailedGame);
+  return recommend.game(detailedGame);
 };
