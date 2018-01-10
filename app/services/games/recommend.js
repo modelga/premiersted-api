@@ -16,11 +16,11 @@ const normalize = (schedule) => {
   const [max, min] = [maxOf(recomendationsValues), minOf(recomendationsValues)];
   const range = max - min;
   if (range === 0) {
-    return schedule;
+    return R.map(R.assoc(fieldName, 1))(schedule);
   }
   const normalized = R.mapObjIndexed((match, isRematchRound) => {
     if (match.status !== 'SCHEDULED') {
-      return { ...match, [fieldName]: 1, enabled: true };
+      return { ...match, [fieldName]: 1 };
     }
     const willBeRematch = schedule[match.rematch].status !== 'SCHEDULED';
     const score = Math.max(0, (match[fieldName] - min) / range);
@@ -63,9 +63,13 @@ module.exports.game = (game) => {
     const toPlayScore = R.mapObjIndexed(R.pipe(R.subtract(avgPlayed)), played);
     const scoredSchedule = R.mapObjIndexed((match) => {
       if (match.status !== 'SCHEDULED') {
-        return match;
+        return { ...match, enabled: true };
       }
-      return { ...match, [fieldName]: toPlayScore[match.home] + toPlayScore[match.visitor] };
+      return {
+        ...match,
+        enabled: true,
+        [fieldName]: toPlayScore[match.home] + toPlayScore[match.visitor],
+      };
     })(schedule);
     return {
       ...game,
