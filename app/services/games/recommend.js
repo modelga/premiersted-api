@@ -4,7 +4,7 @@ const Cache = require('../../utils/cache');
 const cache = Cache({ maxAge: 2000, max: 1000 });
 
 const metricList = R.curry((metricFunction, list) =>
-  R.pipe(R.values, R.reduce(metricFunction, R.values(list)[0]))(list));
+  R.pipe(R.values, R.reduce(metricFunction, R.head(R.values(list)) || 0))(list));
 
 const average = list => metricList(R.add, list) / R.length(R.values(list));
 const maxOf = metricList(R.max);
@@ -22,7 +22,7 @@ const sort = matches =>
   )(matches);
 const normalize = (schedule, isRematchRound) => {
   const recomendationsValues = R.values(R.pluck(fieldName, schedule));
-  const [max = 0, min = 0] = [maxOf(recomendationsValues), minOf(recomendationsValues)];
+  const [max, min] = [maxOf(recomendationsValues), minOf(recomendationsValues)];
   const range = max - min;
   if (range === 0) {
     return R.mapObjIndexed(match => ({
@@ -68,10 +68,9 @@ module.exports.game = (game) => {
     const avgPlayed = average(played);
     const isRematchRound = minOf(played) >= table.length - 1;
     const toPlayScore = R.mapObjIndexed(R.pipe(R.subtract(avgPlayed)), played);
-
     const scoredSchedule = R.mapObjIndexed((match) => {
       if (match.status !== 'SCHEDULED') {
-        return { ...match, enabled: true };
+        return { ...match, enabled: true, [fieldName]: 0 };
       }
       const willBeRematch = schedule[match.rematch].status !== 'SCHEDULED';
       const enabled = isRematchRound || !match.willBeRematch;
