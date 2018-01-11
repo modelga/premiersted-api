@@ -63,7 +63,7 @@ module.exports.contest = async ({ id, gid }) => {
 };
 module.exports.game = (game) => {
   const { table, schedule } = game;
-  if (!R.isEmpty(table) || R.isEmpty(schedule)) {
+  if (!R.isEmpty(table) && !R.isEmpty(schedule)) {
     const played = R.pipe(R.indexBy(R.prop('id')), R.mapObjIndexed(R.prop('played')))(table);
     const avgPlayed = average(played);
     const isRematchRound = minOf(played) >= table.length - 1;
