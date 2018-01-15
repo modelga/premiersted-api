@@ -6,9 +6,10 @@ const level = require('../services/level');
 
 const getToken = ({ user }) =>
   jwt.sign(user, config.get('JWT_SECRET'), {
-    issuer: 'Premiersted', expiresIn: '7 days',
+    issuer: 'Premiersted',
+    expiresIn: '7 days',
   });
-const template = token => `
+const templatePopup = ({ token }) => `
   <html>
     <head>
       <title>JWT Token</title>
@@ -23,9 +24,21 @@ const template = token => `
     </head>
   </html>
 `;
-const auth = ({ user }, res) => {
+
+const templateRedirect = ({ token, returnUrl, where }) => `
+  <html>
+    <head>
+      <title>JWT Token</title>
+      <script>
+        window.location="${returnUrl}?token=${token}&where=${where}";
+      </script>
+    </head>
+  </html>
+`;
+const auth = ({ user, query: { returnUrl, where } }, res) => {
+  const tpl = returnUrl ? templateRedirect : templatePopup;
   if (user) {
-    res.send(template(getToken({ user })));
+    res.send(tpl({ token: getToken({ user }), returnUrl, where }));
   }
 };
 
@@ -65,7 +78,8 @@ const protect = (req, res, next) => {
 
 const protectLevel = requestedLevel => (req, res, next) => {
   protect(req, res, () => {
-    users.getAccess(req.user)
+    users
+      .getAccess(req.user)
       .then((userLevel) => {
         if (level.atLeast(userLevel, requestedLevel)) {
           next();
@@ -80,5 +94,9 @@ const protectLevel = requestedLevel => (req, res, next) => {
   });
 };
 module.exports = {
-  auth, protect, protectLevel, getToken, decodeJWT,
+  auth,
+  protect,
+  protectLevel,
+  getToken,
+  decodeJWT,
 };

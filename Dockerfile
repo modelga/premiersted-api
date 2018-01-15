@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:8.9.4-alpine
 RUN npm i -g npm foreman
 WORKDIR  /app
 CMD npx nf run node app
