@@ -20,6 +20,7 @@ const sort = matches =>
   R.pipe(
     R.values,
     R.sortWith([
+      R.descend(R.pipe(R.prop('enabled'), d => (d ? 1 : 0))),
       R.descend(R.prop('recommended')),
       R.descend(R.pipe(R.prop('updated'), alignedDate)),
       R.ascend(R.pipe(R.prop('rematch'))),
