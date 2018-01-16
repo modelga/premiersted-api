@@ -10,13 +10,19 @@ const average = list => metricList(R.add, list) / R.length(R.values(list));
 const maxOf = metricList(R.max);
 const minOf = metricList(R.min);
 const fieldName = 'recommended';
+
+const alignedDate = (d) => {
+  const time = new Date(d).getTime() / 1000;
+  return time - time % 60;
+};
+
 const sort = matches =>
   R.pipe(
     R.values,
     R.sortWith([
       R.descend(R.prop('recommended')),
-      R.descend(R.pipe(R.prop('updated'), d => new Date(d).getTime())),
-      R.ascend(R.pipe(R.prop('id'))),
+      R.descend(R.pipe(R.prop('updated'), alignedDate)),
+      R.ascend(R.pipe(R.prop('rematch'))),
     ]),
     R.indexBy(R.prop('id')),
   )(matches);
