@@ -1,6 +1,9 @@
 const app = require('express').Router();
+const { protectLevel } = require('../../utils/jwt');
 
-app.use('/', require('./games'));
-app.use('/', require('./results'));
+const atLeastUser = protectLevel('USER');
+
+app.use('/', atLeastUser, require('./games'));
+app.use('/', atLeastUser, require('./results'));
 
 module.exports = app;
