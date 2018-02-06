@@ -18,6 +18,7 @@ module.exports = async (err, req, res, next) => {
   const message = R.concat(': ', R.defaultTo(req.path, R.prop('message', err) || null));
   const { code, msg, payload } = R.cond([
     [R.is(E.BadRequest), use({ code: 400, msg: `Bad Request${message}` })],
+    [R.is(E.Unauthorized), use({ code: 401, msg: `Unauthorized${message}` })],
     [R.is(E.NotFound), use({ code: 404, msg: `Not Found${message}` })],
     [R.is(E.Conflict), use({ code: 409, msg: `Conflict: ${err.message}` })],
     [R.is(E.Forbidden), use({ code: 403, msg: `Forbidden: ${err.message}` })],

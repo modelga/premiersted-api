@@ -11,7 +11,7 @@ module.exports = (app) => {
   app.use('/games', protect, require('./games'));
   app.use('/events', protect, require('./events'));
   app.use('/contests', protect, require('./contests'));
-  app.use('/jwt', protect, require('./jwt'));
+  app.use('/jwt', require('./jwt'));
   app.use(require('./utils/error'));
 };
 
