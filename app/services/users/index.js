@@ -1,4 +1,4 @@
-const { users  } = require('../../db');
+const { users } = require('../../db');
 const R = require('ramda');
 const userDetails = require('./userDetails');
 const cachedFind = require('./cachedFind');

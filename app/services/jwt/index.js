@@ -12,7 +12,7 @@ const issuer = 'Premiersted-External';
 
 const generateExternalToken = (pass, data) => jwtLib.sign({ data }, pass, {
   issuer,
-  expiresIn: '1 hour',
+  expiresIn: '3m',
 });
 
 module.exports = {
@@ -22,18 +22,17 @@ module.exports = {
     };
   },
 
-  async external(user) {
-    const { id, meta: { slack } } = await users.findById(user.id);
+  async external({ id }, returnUrl) {
     const pass = await getUserTemporaryPass(id);
     return {
-      token: generateExternalToken(pass, { id, slack }),
+      token: generateExternalToken(pass, { id, returnUrl }),
     };
   },
 
   async verifyExternal(token) {
-    const { data: { id } } = jwtLib.decode(token);
-    const pass = await getUserTemporaryPass(id);
     try {
+      const { data: { id } } = jwtLib.decode(token);
+      const pass = await getUserTemporaryPass(id);
       jwtLib.verify(token, pass, { issuer });
       return users.findById(id);
     } catch (e) {

@@ -140,18 +140,34 @@ const get = async (params = { relate: '*', type: 'common' }) => {
 const scan = type => events.scan(type);
 const findById = ({ id }) => events.findById({ id });
 
+let connectors = [];
 
 const subscribe = (ws) => {
   subscriptions.push(ws);
+  ws.on('message', (m) => {
+    try {
+      const message = JSON.parse(m);
+      if (message.event === 'connector.register') {
+        connectors = connectors.filter(connector => connector.ws !== ws);
+        connectors.push({ data: message.data, ws });
+      }
+      console.log('new connector, now have', connectors.length);
+    } catch (e) {
+      console.log('received invalid message');
+    }
+  });
 };
 
 const unsubscribe = (ws) => {
   subscriptions = subscriptions.filter(ew => ew !== ws);
+  connectors = connectors.filter(connector => connector.ws !== ws);
 };
 const mergeEvents = ((...evs) => msg => (req, res, next) => {
   evs.forEach(ev => ev(msg)(req, res, R.T));
   return next();
 });
+
+const getConnectors = () => R.pluck('data', connectors);
 module.exports = {
   event,
   predefined,
@@ -162,4 +178,5 @@ module.exports = {
   unsubscribe,
   systemEvent,
   mergeEvents,
+  getConnectors,
 };

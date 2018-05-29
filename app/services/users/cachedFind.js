@@ -4,8 +4,14 @@ const Cache = require('../../utils/cache');
 const cache = Cache({ maxAge: 1000 * 60, max: 100 });
 const getCached = async ({ id }) =>
   cache.getOrSet(id, async () => {
-    const { meta: { avatar_url, name } } = await users.findById(id, ['users']);
-    return { id, name, avatar_url };
+    const {
+      meta: {
+        avatar_url, name, displayName, team,
+      },
+    } = await users.findById(id, ['users']);
+    return {
+      id, name: displayName || name, team, avatar_url,
+    };
   });
 
 module.exports = getCached;

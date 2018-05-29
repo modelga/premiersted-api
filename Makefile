@@ -12,7 +12,7 @@ run:
 
 run-dev: build
 	docker rm -f premiersted-dev || true
-	docker run -e LETSENCRYPT_HOST=$(HOST) -e LETSENCRYPT_HOST=$(HOST) --name premiersted-dev --rm -d  premiersted:latest
+	docker run -e LETSENCRYPT_HOST=$(HOST) -e LETSENCRYPT_HOST=$(HOST) --name premiersted-dev -v $(PWD)/.env:/app/.env  -d  premiersted:latest
 
 logs:
 	docker logs -f premiersted

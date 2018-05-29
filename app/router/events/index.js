@@ -1,7 +1,7 @@
 const app = require('express').Router();
 const { protectLevel } = require('../../utils/jwt');
 const {
-  get, scan, findById, subscribe, unsubscribe,
+  get, scan, findById, subscribe, unsubscribe, getConnectors,
 } = require('../../services/events');
 const R = require('ramda');
 
@@ -14,6 +14,10 @@ app.ws('/ws', (ws) => {
 
 app.get('/', (req, res) => {
   res.handle(get({ ...req.query, relate: '*', type: 'common' }));
+});
+
+app.get('/connectors', (req, res) => {
+  res.handle(getConnectors());
 });
 
 app.get('/:type', (req, res) => {

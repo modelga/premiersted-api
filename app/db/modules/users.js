@@ -38,7 +38,7 @@ module.exports = dbP => ({
     const db = await dbP;
     await db.query(
       'UPDATE users SET meta=? WHERE id=?',
-      [JSON.stringify({ ...meta, ...rest }), id],
+      [JSON.stringify(R.mergeDeepLeft(rest, meta)), id],
     );
     return this.findById(id);
   },
